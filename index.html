@@ -333,6 +333,7 @@
         let signer = null;
         let userAddress = null;
         let isWalletConnected = false;
+        let isProcessing = false;
         let diceGameContract = null;
 
 
@@ -510,6 +511,11 @@
 
         // --- Game Logic with Transactions ---
         const rollDie = async (userGuess) => {
+            // Check if a transaction is already being processed
+            if (isProcessing) {
+                return;
+            }
+
             const betAmount = betAmountInput.value;
             if (!betAmount || parseFloat(betAmount) <= 0) {
                 messageBox.textContent = "Please enter a valid bet amount.";
@@ -524,8 +530,11 @@
                 messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
                 return;
             }
-
+            
+            // Set processing flag and disable controls
+            isProcessing = true;
             enableGameControls(false);
+
             messageBox.textContent = 'Processing transaction... Please confirm in your wallet.';
             messageBox.className = 'text-yellow-400 h-10 text-xl font-semibold';
 
@@ -558,13 +567,11 @@
                         }
 
                         updateBalance();
-                        enableGameControls(true);
                     }, 750);
                 } else {
                     messageBox.textContent = "Game transaction confirmed, but no result event was found.";
                     messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
                     updateBalance();
-                    enableGameControls(true);
                 }
             } catch (error) {
                 console.error("Transaction failed:", error);
@@ -574,6 +581,9 @@
                     messageBox.textContent = `Transaction failed: ${error.message}`;
                 }
                 messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
+            } finally {
+                // Reset processing flag and enable controls
+                isProcessing = false;
                 enableGameControls(true);
             }
         };
