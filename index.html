@@ -399,17 +399,12 @@
 
                     // Check if on the correct network
                     if (chainId !== somniaNetwork.chainId) {
-                        const networkAdded = await addSomniaNetwork();
-                        if (!networkAdded) return;
-                        // Wait for the user to switch the network
-                        await new Promise(resolve => {
-                            window.ethereum.on('chainChanged', (newChainId) => {
-                                if (newChainId === somniaNetwork.chainId) {
-                                    window.location.reload(); // Reload after network change
-                                    resolve();
-                                }
-                            });
-                        });
+                        messageBox.textContent = "Please switch to the Somnia Testnet in your wallet.";
+                        messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
+                        enableGameControls(false); // Ensure controls are disabled until network is correct
+                        // Prompt to add the network if it's not already added
+                        await addSomniaNetwork();
+                        return; // Exit the function, let the chainChanged event handle the rest
                     }
 
                     // Request accounts and get signer
