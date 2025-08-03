@@ -93,7 +93,7 @@
         }
         .button-even:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 8px -1px rgba(34, 197, 94, 0.6);
+            box-shadow: 0 6px 8px -1p rgba(34, 197, 94, 0.6);
         }
         .button-odd:active, .button-even:active {
             transform: translateY(0);
@@ -359,10 +359,14 @@
         const updateWalletUI = () => {
             if (isWalletConnected) {
                 connectButton.textContent = 'Disconnect Wallet';
+                connectButton.classList.remove('hidden');
+                switchNetworkButton.classList.add('hidden');
                 walletInfo.classList.remove('hidden');
                 walletAddressSpan.textContent = userAddress;
             } else {
                 connectButton.textContent = 'Connect Wallet';
+                connectButton.classList.remove('hidden');
+                switchNetworkButton.classList.add('hidden');
                 walletInfo.classList.add('hidden');
                 walletAddressSpan.textContent = '';
                 walletBalanceSpan.textContent = '';
@@ -419,22 +423,19 @@
         const connectWallet = async () => {
             if (window.ethereum) {
                 try {
-                    // Request accounts, which will also prompt for network switch/add if needed.
-                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    userAddress = accounts[0];
-                    isWalletConnected = true;
-
-                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    messageBox.textContent = 'Connecting...';
+                    messageBox.className = 'text-yellow-400 h-10 text-xl font-semibold';
+                    
+                    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
                     const { chainId } = await provider.getNetwork();
 
-                    // Now check if we are on the correct network.
                     if (chainId === parseInt(somniaNetwork.chainId)) {
-                        // Correct network, proceed with game.
+                        // Correct network, proceed to connect accounts.
+                        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                        userAddress = accounts[0];
+                        isWalletConnected = true;
                         signer = provider.getSigner();
                         diceGameContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-                        
-                        connectButton.classList.remove('hidden');
-                        switchNetworkButton.classList.add('hidden');
                         
                         updateWalletUI();
                         updateBalance();
@@ -443,6 +444,9 @@
                         messageBox.className = 'text-green-400 h-10 text-xl font-semibold';
                     } else {
                         // Wrong network, prompt to switch.
+                        isWalletConnected = false;
+                        updateWalletUI(); // Reset UI state first
+                        
                         messageBox.textContent = "Wrong network. Please switch to Somnia Testnet.";
                         messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
                         
@@ -452,11 +456,10 @@
                         enableGameControls(false);
                     }
                 } catch (error) {
-                    // Handle user rejection and other errors
                     console.error("Connection failed:", error);
                     messageBox.textContent = "Connection to wallet failed. Please try again.";
                     messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
-                    disconnectWallet(); // A clean reset
+                    disconnectWallet();
                 }
             } else {
                 messageBox.textContent = "MetaMask or another wallet is not installed. Please install one to play.";
@@ -465,7 +468,6 @@
         };
 
         const disconnectWallet = () => {
-            // This is a soft disconnect for the UI. MetaMask doesn't have a formal disconnect API.
             userAddress = null;
             isWalletConnected = false;
             provider = null;
@@ -502,7 +504,7 @@
                 }
             });
             window.ethereum.on('chainChanged', () => {
-                window.location.reload(); // Recommended by MetaMask for a clean state
+                window.location.reload();
             });
         }
 
