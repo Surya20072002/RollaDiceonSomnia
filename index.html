@@ -113,6 +113,13 @@
         .bet-button:hover {
             background-color: #64748b;
         }
+        .switch-button {
+            background-color: #f59e0b;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .switch-button:hover {
+            background-color: #fbbf24;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen text-gray-100 p-4">
@@ -131,6 +138,10 @@
                 <p>Address: <span id="wallet-address" class="text-gray-200"></span></p>
                 <p>Balance: <span id="wallet-balance" class="text-green-400"></span> STT</p>
             </div>
+            <!-- Switch Network button -->
+            <button id="switch-network-button" class="switch-button text-white font-bold py-3 px-6 rounded-xl w-full hidden">
+                Switch to Somnia Testnet
+            </button>
         </div>
 
         <!-- Die display area -->
@@ -315,6 +326,7 @@
         const walletInfo = document.getElementById('wallet-info');
         const walletAddressSpan = document.getElementById('wallet-address');
         const walletBalanceSpan = document.getElementById('wallet-balance');
+        const switchNetworkButton = document.getElementById('switch-network-button');
 
         // --- Global State ---
         let provider = null;
@@ -369,27 +381,40 @@
                 }
             }
         };
-
-        const addSomniaNetwork = async () => {
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_addEthereumChain',
-                    params: [{
-                        chainId: somniaNetwork.chainId,
-                        rpcUrls: somniaNetwork.rpcUrls,
-                        chainName: somniaNetwork.chainName,
-                        nativeCurrency: somniaNetwork.nativeCurrency,
-                        blockExplorerUrls: somniaNetwork.blockExplorerUrls,
-                    }],
-                });
-                return true;
-            } catch (error) {
-                console.error("Failed to add network:", error);
-                messageBox.textContent = "Please add the Somnia network to your wallet.";
-                messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
-                return false;
+        
+        const switchNetwork = async () => {
+             if (window.ethereum) {
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: somniaNetwork.chainId }],
+                    });
+                    // After the network switch, the 'chainChanged' event will fire,
+                    // which will reload the page and re-connect the wallet.
+                } catch (switchError) {
+                    // This error code indicates that the chain has not been added to MetaMask.
+                    if (switchError.code === 4902) {
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: somniaNetwork.chainId,
+                                    rpcUrls: somniaNetwork.rpcUrls,
+                                    chainName: somniaNetwork.chainName,
+                                    nativeCurrency: somniaNetwork.nativeCurrency,
+                                    blockExplorerUrls: somniaNetwork.blockExplorerUrls,
+                                }],
+                            });
+                        } catch (addError) {
+                            console.error("Failed to add network:", addError);
+                        }
+                    } else {
+                        console.error("Failed to switch network:", switchError);
+                    }
+                }
             }
         };
+
 
         const connectWallet = async () => {
             if (window.ethereum) {
@@ -401,10 +426,10 @@
                     if (chainId !== somniaNetwork.chainId) {
                         messageBox.textContent = "Please switch to the Somnia Testnet in your wallet.";
                         messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
-                        enableGameControls(false); // Ensure controls are disabled until network is correct
-                        // Prompt to add the network if it's not already added
-                        await addSomniaNetwork();
-                        return; // Exit the function, let the chainChanged event handle the rest
+                        connectButton.classList.add('hidden');
+                        switchNetworkButton.classList.remove('hidden');
+                        enableGameControls(false); 
+                        return;
                     }
 
                     // Request accounts and get signer
@@ -450,6 +475,9 @@
                 connectWallet();
             }
         });
+
+        // Event listener for the new Switch Network button
+        switchNetworkButton.addEventListener('click', switchNetwork);
 
         // Listen for account changes and network changes
         if (window.ethereum) {
