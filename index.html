@@ -426,15 +426,17 @@
                 try {
                     messageBox.textContent = 'Connecting...';
                     messageBox.className = 'text-yellow-400 h-10 text-xl font-semibold';
-                    
-                    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-                    const { chainId } = await provider.getNetwork();
 
+                    // Request accounts first, this will also prompt the user to connect
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    userAddress = accounts[0];
+                    isWalletConnected = true;
+
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const { chainId } = await provider.getNetwork();
+                    
                     if (chainId === parseInt(somniaNetwork.chainId)) {
-                        // Correct network, proceed to connect accounts.
-                        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                        userAddress = accounts[0];
-                        isWalletConnected = true;
+                        // Correct network, proceed with game.
                         signer = provider.getSigner();
                         diceGameContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
                         
@@ -446,7 +448,7 @@
                     } else {
                         // Wrong network, prompt to switch.
                         isWalletConnected = false;
-                        updateWalletUI(); // Reset UI state first
+                        updateWalletUI();
                         
                         messageBox.textContent = "Wrong network. Please switch to Somnia Testnet.";
                         messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
