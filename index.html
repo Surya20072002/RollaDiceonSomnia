@@ -419,35 +419,44 @@
         const connectWallet = async () => {
             if (window.ethereum) {
                 try {
-                    provider = new ethers.providers.Web3Provider(window.ethereum);
-                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    // Request accounts, which will also prompt for network switch/add if needed.
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    userAddress = accounts[0];
+                    isWalletConnected = true;
 
-                    // Check if on the correct network
-                    if (chainId !== somniaNetwork.chainId) {
-                        messageBox.textContent = "Please switch to the Somnia Testnet in your wallet.";
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const { chainId } = await provider.getNetwork();
+
+                    // Now check if we are on the correct network.
+                    if (chainId === parseInt(somniaNetwork.chainId)) {
+                        // Correct network, proceed with game.
+                        signer = provider.getSigner();
+                        diceGameContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+                        
+                        connectButton.classList.remove('hidden');
+                        switchNetworkButton.classList.add('hidden');
+                        
+                        updateWalletUI();
+                        updateBalance();
+                        enableGameControls(true);
+                        messageBox.textContent = "Wallet connected! Place your bet.";
+                        messageBox.className = 'text-green-400 h-10 text-xl font-semibold';
+                    } else {
+                        // Wrong network, prompt to switch.
+                        messageBox.textContent = "Wrong network. Please switch to Somnia Testnet.";
                         messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
+                        
                         connectButton.classList.add('hidden');
                         switchNetworkButton.classList.remove('hidden');
-                        enableGameControls(false); 
-                        return;
+                        
+                        enableGameControls(false);
                     }
-
-                    // Request accounts and get signer
-                    const accounts = await provider.send('eth_requestAccounts', []);
-                    userAddress = accounts[0];
-                    signer = provider.getSigner();
-                    diceGameContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-                    isWalletConnected = true;
-                    updateWalletUI();
-                    updateBalance();
-                    enableGameControls(true);
-                    messageBox.textContent = "Wallet connected! Place your bet.";
-                    messageBox.className = 'text-green-400 h-10 text-xl font-semibold';
                 } catch (error) {
+                    // Handle user rejection and other errors
                     console.error("Connection failed:", error);
                     messageBox.textContent = "Connection to wallet failed. Please try again.";
                     messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
-                    isWalletConnected = false;
+                    disconnectWallet(); // A clean reset
                 }
             } else {
                 messageBox.textContent = "MetaMask or another wallet is not installed. Please install one to play.";
@@ -465,6 +474,8 @@
             updateWalletUI();
             messageBox.textContent = "Wallet disconnected.";
             messageBox.className = 'text-gray-400 h-10 text-xl font-semibold';
+            switchNetworkButton.classList.add('hidden');
+            connectButton.classList.remove('hidden');
         };
 
         // Event listener for connect/disconnect button
