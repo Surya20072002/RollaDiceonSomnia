@@ -3,547 +3,561 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>dApp - Rock, Paper, Scissors</title>
-    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+    <title>SOmnia Roll a Die DApp</title>
+    <!-- Tailwind CSS via CDN for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Inter font from Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap">
+    <!-- Ethers.js library for blockchain interaction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #111827; }
-        .game-card { background-color: #1F2937; border: 1px solid #4B5563; box-shadow: 0 0 25px rgba(129, 140, 248, 0.2); }
-        .btn-choice { transition: all 0.2s ease-in-out; }
-        .btn-choice:hover { transform: translateY(-4px); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .btn-choice:active { transform: translateY(-1px); }
-        .btn-primary { background-color: #4f46e5; color: white; transition: background-color 0.2s ease; }
-        .btn-primary:hover { background-color: #4338ca; }
-        .btn-bet { background-color: #374151; color: #d1d5db; border: 2px solid #4b5563; transition: all 0.2s ease; }
-        .btn-bet:hover { background-color: #4b5563; border-color: #6b7280; }
-        .btn-bet.selected { background-color: #4f46e5; border-color: #818cf8; color: white; transform: scale(1.05); }
-        #custom-bet-input { background-color: #374151; border: 2px solid #4b5563; color: white; }
-        #custom-bet-input:focus { outline: none; border-color: #818cf8; }
-        .result-display { min-height: 100px; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease-in-out; }
-        .choice-display { transition: all 0.3s ease-in-out; border: 2px solid transparent; }
-        .choice-display.winner { border-color: #22c55e; box-shadow: 0 0 15px rgba(34, 197, 94, 0.5); }
-        .choice-display.loser { border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
-        .choice-display.tie { border-color: #6b7280; }
-        .status-bar { background-color: rgba(31, 41, 55, 0.8); backdrop-filter: blur(10px); }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+        }
+
+        .die-face {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 4px;
+            width: 80px;
+            height: 80px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease-in-out;
+            border: 2px solid #334155;
+        }
+
+        .dot {
+            width: 16px;
+            height: 16px;
+            background-color: #1e293b;
+            border-radius: 50%;
+            place-self: center;
+        }
+        
+        .die-1 .dot:nth-child(1) { grid-area: 2 / 2 / 3 / 3; }
+
+        .die-2 .dot:nth-child(1) { grid-area: 1 / 1 / 2 / 2; }
+        .die-2 .dot:nth-child(2) { grid-area: 3 / 3 / 4 / 4; }
+
+        .die-3 .dot:nth-child(1) { grid-area: 1 / 1 / 2 / 2; }
+        .die-3 .dot:nth-child(2) { grid-area: 2 / 2 / 3 / 3; }
+        .die-3 .dot:nth-child(3) { grid-area: 3 / 3 / 4 / 4; }
+
+        .die-4 .dot:nth-child(1) { grid-area: 1 / 1 / 2 / 2; }
+        .die-4 .dot:nth-child(2) { grid-area: 1 / 3 / 2 / 4; }
+        .die-4 .dot:nth-child(3) { grid-area: 3 / 1 / 4 / 2; }
+        .die-4 .dot:nth-child(4) { grid-area: 3 / 3 / 4 / 4; }
+
+        .die-5 .dot:nth-child(1) { grid-area: 1 / 1 / 2 / 2; }
+        .die-5 .dot:nth-child(2) { grid-area: 1 / 3 / 2 / 4; }
+        .die-5 .dot:nth-child(3) { grid-area: 2 / 2 / 3 / 3; }
+        .die-5 .dot:nth-child(4) { grid-area: 3 / 1 / 4 / 2; }
+        .die-5 .dot:nth-child(5) { grid-area: 3 / 3 / 4 / 4; }
+
+        .die-6 .dot:nth-child(1) { grid-area: 1 / 1 / 2 / 2; }
+        .die-6 .dot:nth-child(2) { grid-area: 1 / 3 / 2 / 4; }
+        .die-6 .dot:nth-child(3) { grid-area: 2 / 1 / 3 / 2; }
+        .die-6 .dot:nth-child(4) { grid-area: 2 / 3 / 3 / 4; }
+        .die-6 .dot:nth-child(5) { grid-area: 3 / 1 / 4 / 2; }
+        .die-6 .dot:nth-child(6) { grid-area: 3 / 3 / 4 / 4; }
+
+        .roll-animation {
+            animation: roll 0.5s ease-in-out forwards;
+        }
+
+        @keyframes roll {
+            0% { transform: rotateX(0deg) rotateY(0deg); }
+            50% { transform: rotateX(180deg) rotateY(180deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg); }
+        }
+
+        .button-odd {
+            background-image: linear-gradient(to right, #ef4444, #dc2626);
+            box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.4);
+            transition: all 0.2s ease-in-out;
+        }
+        .button-even {
+            background-image: linear-gradient(to right, #22c55e, #16a34a);
+            box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.4);
+            transition: all 0.2s ease-in-out;
+        }
+        .button-odd:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px -1px rgba(239, 68, 68, 0.6);
+        }
+        .button-even:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px -1px rgba(34, 197, 94, 0.6);
+        }
+        .button-odd:active, .button-even:active {
+            transform: translateY(0);
+        }
+        .connect-button {
+            background-color: #3b82f6;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .connect-button:hover {
+            background-color: #60a5fa;
+        }
+        .bet-button {
+            background-color: #4a5568;
+            color: #d1d5db;
+            transition: all 0.2s ease-in-out;
+        }
+        .bet-button:hover {
+            background-color: #64748b;
+        }
     </style>
 </head>
-<body class="text-white">
+<body class="flex items-center justify-center min-h-screen text-gray-100 p-4">
 
-    <!-- Header / Wallet Connector -->
-    <div id="wallet-bar" class="status-bar fixed top-0 left-0 right-0 p-4 flex justify-between items-center border-b border-gray-700">
-        <div id="balance-display" class="hidden items-center space-x-3 bg-gray-700 py-2 px-4 rounded-lg">
-            <span class="font-bold text-indigo-300">Balance:</span>
-            <span id="player-balance" class="font-mono text-sm">0.00</span>
-            <span class="text-gray-400">STT</span>
+    <!-- Main game container -->
+    <div class="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full space-y-6 text-center border-2 border-gray-700">
+        <h1 class="text-4xl font-bold text-gray-50">SOmnia Die Roll</h1>
+        <p class="text-gray-400">Bet on Odd or Even to win 2x!</p>
+
+        <!-- Wallet connection status -->
+        <div class="space-y-2">
+            <button id="connect-button" class="connect-button text-white font-bold py-3 px-6 rounded-xl w-full">
+                Connect Wallet
+            </button>
+            <div id="wallet-info" class="text-sm text-gray-400 break-words hidden">
+                <p>Address: <span id="wallet-address" class="text-gray-200"></span></p>
+                <p>Balance: <span id="wallet-balance" class="text-green-400"></span> STT</p>
+            </div>
         </div>
-        <button id="connect-wallet-btn" class="btn-primary font-semibold py-2 px-4 rounded-lg">
-            Connect Wallet
-        </button>
-        <div id="wallet-info" class="hidden items-center space-x-3 bg-gray-700 py-2 px-4 rounded-lg">
-            <span class="w-3 h-3 bg-green-400 rounded-full"></span>
-            <span id="wallet-address" class="font-mono text-sm"></span>
+
+        <!-- Die display area -->
+        <div class="flex justify-center items-center h-24">
+            <div id="die" class="die-face">
+                <!-- Dots for the die face will be added by JavaScript -->
+            </div>
         </div>
-    </div>
 
-    <div class="min-h-screen flex flex-col items-center justify-center pt-20 pb-10">
-        <div class="w-full max-w-2xl mx-auto p-6 md:p-8 rounded-2xl game-card">
-            
-            <div class="text-center mb-4">
-                <h2 class="text-3xl md:text-4xl font-bold text-white">Rock ✊ Paper ✋ Scissors ✌️</h2>
-                <p class="text-gray-400 mt-2">Place your bet and make your move.</p>
+        <!-- Bet input and buttons -->
+        <div class="space-y-4">
+            <div class="flex items-center justify-center space-x-2">
+                <input type="number" id="bet-amount" class="w-24 text-center bg-gray-700 text-gray-100 rounded-xl p-2" placeholder="Custom" min="0.001" step="0.001" disabled>
+                <span class="text-gray-400">STT</span>
             </div>
-
-            <!-- Bet Selection -->
-            <div class="mb-6">
-                <p class="text-center text-sm font-semibold text-gray-400 mb-3">SELECT BET AMOUNT (STT)</p>
-                <div id="bet-controls" class="flex justify-center flex-wrap gap-2">
-                    <button data-bet="0.01" class="btn-bet font-semibold py-2 px-4 rounded-lg">0.01</button>
-                    <button data-bet="0.05" class="btn-bet font-semibold py-2 px-4 rounded-lg">0.05</button>
-                    <button data-bet="0.1" class="btn-bet font-semibold py-2 px-4 rounded-lg">0.1</button>
-                </div>
-                <div class="flex justify-center items-center gap-2 mt-3">
-                    <input type="number" id="custom-bet-input" placeholder="Custom Bet" class="w-32 text-center rounded-lg py-2 px-3">
-                    <button id="set-custom-bet-btn" class="btn-primary font-semibold py-2 px-4 rounded-lg">Set</button>
-                </div>
+            <!-- Quick bet buttons -->
+            <div id="quick-bets" class="flex flex-wrap justify-center gap-2">
+                <button class="bet-button px-4 py-2 rounded-xl text-sm" data-value="0.001" disabled>0.001</button>
+                <button class="bet-button px-4 py-2 rounded-xl text-sm" data-value="0.01" disabled>0.01</button>
+                <button class="bet-button px-4 py-2 rounded-xl text-sm" data-value="0.05" disabled>0.05</button>
+                <button class="bet-button px-4 py-2 rounded-xl text-sm" data-value="0.1" disabled>0.1</button>
+                <button class="bet-button px-4 py-2 rounded-xl text-sm" data-value="1" disabled>1</button>
             </div>
 
-            <!-- Game Display -->
-            <div class="flex justify-around items-center my-6">
-                <div class="text-center">
-                    <h3 class="text-lg font-semibold text-indigo-300 mb-3">You</h3>
-                    <div id="player-choice-display" class="choice-display bg-gray-700 w-32 h-32 md:w-40 md:h-40 rounded-xl flex items-center justify-center text-5xl">?</div>
-                </div>
-                <div class="text-2xl font-bold text-gray-500">VS</div>
-                <div class="text-center">
-                    <h3 class="text-lg font-semibold text-gray-400 mb-3">Opponent</h3>
-                    <div id="opponent-choice-display" class="choice-display bg-gray-900 w-32 h-32 md:w-40 md:h-40 rounded-xl flex items-center justify-center text-5xl">?</div>
-                </div>
+            <div class="flex justify-center space-x-4">
+                <button id="odd-button" class="button-odd text-white font-bold py-3 px-6 rounded-xl w-1/2" disabled>
+                    ODD
+                </button>
+                <button id="even-button" class="button-even text-white font-bold py-3 px-6 rounded-xl w-1/2" disabled>
+                    EVEN
+                </button>
             </div>
+        </div>
 
-            <!-- Result Display -->
-            <div id="result-display" class="result-display text-center text-xl font-bold my-6 p-4 rounded-lg bg-gray-900/50">
-                Connect your wallet to start
-            </div>
-            
-            <div id="play-again-container" class="text-center mt-6 hidden">
-                <button id="play-again-btn" class="btn-primary font-bold py-3 px-6 rounded-lg text-lg">Play Again</button>
-            </div>
+        <!-- Result message box -->
+        <div id="message-box" class="h-10 text-xl font-semibold">
+            &nbsp; <!-- Non-breaking space to maintain height -->
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- DOM Elements ---
-            const connectWalletBtn = document.getElementById('connect-wallet-btn');
-            const walletInfo = document.getElementById('wallet-info');
-            const walletAddressEl = document.getElementById('wallet-address');
-            const balanceDisplay = document.getElementById('balance-display');
-            const playerBalanceEl = document.getElementById('player-balance');
-            const playerChoiceDisplay = document.getElementById('player-choice-display');
-            const opponentChoiceDisplay = document.getElementById('opponent-choice-display');
-            const resultDisplay = document.getElementById('result-display');
-            const choiceButtons = document.querySelectorAll('.btn-choice');
-            const betButtons = document.querySelectorAll('.btn-bet');
-            const customBetInput = document.getElementById('custom-bet-input');
-            const setCustomBetBtn = document.getElementById('set-custom-bet-btn');
-            const playAgainBtn = document.getElementById('play-again-btn');
-            const playAgainContainer = document.getElementById('play-again-container');
+        // --- Network and DApp Configuration ---
+        const somniaNetwork = {
+            chainId: '0xC488', // 50312 in hex
+            chainName: 'Somnia Testnet',
+            rpcUrls: ['https://dream-rpc.somnia.network/'],
+            nativeCurrency: { name: 'STT', symbol: 'STT', decimals: 18 },
+            blockExplorerUrls: ['https://shannon-explorer.somnia.network/']
+        };
 
-            // --- Ethers.js and Contract Setup ---
-            const contractAddress = "0x2b2C3f7321507Af4947Cfa60703Bd3933Dc52F11"; 
-            const contractABI = [ { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "uint256", "name": "gameId", "type": "uint256" }, { "indexed": true, "internalType": "address", "name": "player", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "BetReturned", "type": "event" }, { "inputs": [ { "internalType": "bytes32", "name": "_choiceHash", "type": "bytes32" } ], "name": "commitMove", "outputs": [], "stateMutability": "payable", "type": "function" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "uint256", "name": "gameId", "type": "uint256" }, { "indexed": true, "internalType": "address", "name": "player1", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "bet", "type": "uint256" } ], "name": "GameCreated", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "uint256", "name": "gameId", "type": "uint256" }, { "indexed": false, "internalType": "address", "name": "winner", "type": "address" }, { "indexed": false, "internalType": "address", "name": "loser", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "payout", "type": "uint256" }, { "indexed": false, "internalType": "bool", "name": "isDraw", "type": "bool" } ], "name": "GameResult", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "previousOwner", "type": "address" }, { "indexed": true, "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "OwnershipTransferred", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "uint256", "name": "gameId", "type": "uint256" }, { "indexed": true, "internalType": "address", "name": "player2", "type": "address" } ], "name": "PlayerJoined", "type": "event" }, { "inputs": [ { "internalType": "uint256", "name": "_gameId", "type": "uint256" } ], "name": "reclaimBet", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "renounceOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "_gameId", "type": "uint256" }, { "internalType": "enum RockPaperScissors.Move", "name": "_choice", "type": "uint8" }, { "internalType": "bytes32", "name": "_salt", "type": "bytes32" } ], "name": "revealMove", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "transferOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "withdraw", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "gameNonce", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "name": "games", "outputs": [ { "internalType": "address", "name": "player1", "type": "address" }, { "internalType": "address", "name": "player2", "type": "address" }, { "internalType": "uint256", "name": "bet", "type": "uint256" }, { "internalType": "bytes32", "name": "choiceHash1", "type": "bytes32" }, { "internalType": "bytes32", "name": "choiceHash2", "type": "bytes32" }, { "internalType": "enum RockPaperScissors.Move", "name": "choice1", "type": "uint8" }, { "internalType": "enum RockPaperScissors.Move", "name": "choice2", "type": "uint8" }, { "internalType": "bool", "name": "isOpen", "type": "bool" }, { "internalType": "uint256", "name": "creationTime", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "openGameId", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "owner", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" } ];
-            
-            let provider;
-            let signer;
-            let contract;
-            let isWalletConnected = false;
-            
-            // --- Game State ---
-            let currentBet = 0.01;
-            let playerChoice = null;
-            let isGameInProgress = false;
-
-            const choiceEnums = { rock: 1, paper: 2, scissors: 3 };
-            const choiceEmojis = { rock: '✊', paper: '✋', scissors: '✌️' };
-
-            // --- Wallet Connection ---
-            const connectWallet = async () => {
-                if (typeof window.ethereum !== 'undefined') {
-                    try {
-                        provider = new ethers.providers.Web3Provider(window.ethereum);
-                        await provider.send("eth_requestAccounts", []);
-                        signer = provider.getSigner();
-                        contract = new ethers.Contract(contractAddress, contractABI, signer);
-
-                        const address = await signer.getAddress();
-                        const balance = await signer.getBalance();
-
-                        walletAddressEl.textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
-                        playerBalanceEl.textContent = ethers.utils.formatEther(balance).slice(0, 5);
-                        
-                        connectWalletBtn.classList.add('hidden');
-                        walletInfo.classList.remove('hidden');
-                        walletInfo.classList.add('flex');
-                        balanceDisplay.classList.remove('hidden');
-                        balanceDisplay.classList.add('flex');
-                        
-                        isWalletConnected = true;
-                        resultDisplay.textContent = 'Select a bet and make your move!';
-                        listenForGameEvents();
-                    } catch (error) {
-                        console.error("Wallet connection failed:", error);
-                        resultDisplay.textContent = 'Wallet connection failed. Check console.';
+        // --- Contract Details ---
+        const CONTRACT_ADDRESS = "0xD4D707ad3d57289c1b52Cf2D3c6Ca99538EC5050";
+        const CONTRACT_ABI = [
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "player",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "betAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "enum DiceGame.Guess",
+                        "name": "guess",
+                        "type": "uint8"
                     }
-                } else {
-                    resultDisplay.textContent = 'Please install MetaMask and add the Somnia Testnet!';
-                }
-            };
+                ],
+                "name": "BetPlaced",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "player",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "rolledNumber",
+                        "type": "uint256"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "enum DiceGame.Guess",
+                        "name": "playerGuess",
+                        "type": "uint8"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "bool",
+                        "name": "isWinner",
+                        "type": "bool"
+                    }
+                ],
+                "name": "GameResult",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "enum DiceGame.Guess",
+                        "name": "_guess",
+                        "type": "uint8"
+                    }
+                ],
+                "name": "placeBet",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "player",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "winnings",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "WinningsPaid",
+                "type": "event"
+            },
+            {
+                "inputs": [],
+                "name": "withdraw",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "stateMutability": "payable",
+                "type": "receive"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
 
-            // --- Game Logic (Interacting with Smart Contract) ---
-            const handleChoice = async (e) => {
-                if (!isWalletConnected || isGameInProgress) return;
-                
-                isGameInProgress = true;
-                playerChoice = e.currentTarget.dataset.choice;
-                playerChoiceDisplay.textContent = choiceEmojis[playerChoice];
-                resultDisplay.textContent = 'Preparing your transaction...';
 
+        // --- DOM Elements ---
+        const dieElement = document.getElementById('die');
+        const oddButton = document.getElementById('odd-button');
+        const evenButton = document.getElementById('even-button');
+        const betAmountInput = document.getElementById('bet-amount');
+        const quickBetButtons = document.querySelectorAll('#quick-bets button');
+        const messageBox = document.getElementById('message-box');
+        const connectButton = document.getElementById('connect-button');
+        const walletInfo = document.getElementById('wallet-info');
+        const walletAddressSpan = document.getElementById('wallet-address');
+        const walletBalanceSpan = document.getElementById('wallet-balance');
+
+        // --- Global State ---
+        let provider = null;
+        let signer = null;
+        let userAddress = null;
+        let isWalletConnected = false;
+        let diceGameContract = null;
+
+
+        // --- Die Face Rendering Logic ---
+        const renderDieFace = (number) => {
+            dieElement.innerHTML = '';
+            dieElement.className = 'die-face';
+            dieElement.classList.add(`die-${number}`);
+            for (let i = 0; i < number; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dieElement.appendChild(dot);
+            }
+        };
+
+        // --- Wallet Connection and Network Handling ---
+        const enableGameControls = (enabled) => {
+            betAmountInput.disabled = !enabled;
+            oddButton.disabled = !enabled;
+            evenButton.disabled = !enabled;
+            quickBetButtons.forEach(button => button.disabled = !enabled);
+        };
+
+        const updateWalletUI = () => {
+            if (isWalletConnected) {
+                connectButton.textContent = 'Disconnect Wallet';
+                walletInfo.classList.remove('hidden');
+                walletAddressSpan.textContent = userAddress;
+            } else {
+                connectButton.textContent = 'Connect Wallet';
+                walletInfo.classList.add('hidden');
+                walletAddressSpan.textContent = '';
+                walletBalanceSpan.textContent = '';
+                enableGameControls(false);
+            }
+        };
+
+        const updateBalance = async () => {
+            if (provider && userAddress) {
                 try {
-                    // 1. Generate a secret salt
-                    const salt = ethers.utils.randomBytes(32);
-                    const choiceEnum = choiceEnums[playerChoice];
-
-                    // 2. Create the hash
-                    const choiceHash = ethers.utils.solidityKeccak256(['uint8', 'bytes32'], [choiceEnum, salt]);
-                    
-                    // 3. Send the transaction to commit the move
-                    const betInWei = ethers.utils.parseEther(currentBet.toString());
-                    const tx = await contract.commitMove(choiceHash, { value: betInWei });
-
-                    resultDisplay.textContent = 'Waiting for transaction confirmation...';
-                    await tx.wait();
-
-                    resultDisplay.textContent = 'Move committed! Waiting for opponent...';
-                    
-                    // Store choice and salt locally to use for the reveal step
-                    localStorage.setItem('playerChoice', choiceEnum);
-                    localStorage.setItem('playerSalt', ethers.utils.hexlify(salt));
-                    
+                    const balance = await provider.getBalance(userAddress);
+                    const formattedBalance = ethers.utils.formatEther(balance);
+                    walletBalanceSpan.textContent = parseFloat(formattedBalance).toFixed(4);
                 } catch (error) {
-                    console.error("Transaction failed:", error);
-                    resultDisplay.textContent = 'Transaction failed. Check console.';
-                    isGameInProgress = false;
+                    console.error("Failed to fetch balance:", error);
                 }
-            };
+            }
+        };
 
-            // --- Event Listeners from Smart Contract ---
-            const listenForGameEvents = () => {
-                if (!contract) re<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>dApp - Rock, Paper, Scissors</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" xintegrity="sha512-FDc6O9mcG4fYpNBvoO3MOKCzkDy3I2iPS2LSS3A2S+e3mD9xYdFHiX9QG3b/i79s9s5gI9v2Uq3h7s3G7A/eA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #111827; }
-        .game-card { background-color: #1F2937; border: 1px solid #4B5563; box-shadow: 0 0 25px rgba(129, 140, 248, 0.2); }
-        .btn-choice { transition: all 0.2s ease-in-out; }
-        .btn-choice:hover { transform: translateY(-4px); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .btn-choice:active { transform: translateY(-1px); }
-        .btn-primary { background-color: #4f46e5; color: white; transition: background-color 0.2s ease; }
-        .btn-primary:hover { background-color: #4338ca; }
-        .btn-bet { background-color: #374151; color: #d1d5db; border: 2px solid #4b5563; transition: all 0.2s ease; }
-        .btn-bet:hover { background-color: #4b5563; border-color: #6b7280; }
-        .btn-bet.selected { background-color: #4f46e5; border-color: #818cf8; color: white; transform: scale(1.05); }
-        #custom-bet-input { background-color: #374151; border: 2px solid #4b5563; color: white; }
-        #custom-bet-input:focus { outline: none; border-color: #818cf8; }
-        .result-display { min-height: 100px; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease-in-out; }
-        .choice-display { transition: all 0.3s ease-in-out; border: 2px solid transparent; }
-        .choice-display.winner { border-color: #22c55e; box-shadow: 0 0 15px rgba(34, 197, 94, 0.5); }
-        .choice-display.loser { border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
-        .choice-display.tie { border-color: #6b7280; }
-        .status-bar { background-color: rgba(31, 41, 55, 0.8); backdrop-filter: blur(10px); }
-    </style>
-</head>
-<body class="text-white">
+        const addSomniaNetwork = async () => {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                        chainId: somniaNetwork.chainId,
+                        rpcUrls: somniaNetwork.rpcUrls,
+                        chainName: somniaNetwork.chainName,
+                        nativeCurrency: somniaNetwork.nativeCurrency,
+                        blockExplorerUrls: somniaNetwork.blockExplorerUrls,
+                    }],
+                });
+                return true;
+            } catch (error) {
+                console.error("Failed to add network:", error);
+                messageBox.textContent = "Please add the Somnia network to your wallet.";
+                messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
+                return false;
+            }
+        };
 
-    <!-- Header / Wallet Connector -->
-    <div id="wallet-bar" class="status-bar fixed top-0 left-0 right-0 p-4 flex justify-between items-center border-b border-gray-700">
-        <div id="balance-display" class="hidden items-center space-x-3 bg-gray-700 py-2 px-4 rounded-lg">
-            <span class="font-bold text-indigo-300">Balance:</span>
-            <span id="player-balance" class="font-mono text-sm">0.00</span>
-            <span class="text-gray-400">STT</span>
-        </div>
-        <button id="connect-wallet-btn" class="btn-primary font-semibold py-2 px-4 rounded-lg">
-            Connect Wallet
-        </button>
-        <div id="wallet-info" class="hidden items-center space-x-3 bg-gray-700 py-2 px-4 rounded-lg">
-            <span class="w-3 h-3 bg-green-400 rounded-full"></span>
-            <span id="wallet-address" class="font-mono text-sm"></span>
-        </div>
-    </div>
+        const connectWallet = async () => {
+            if (window.ethereum) {
+                try {
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
 
-    <div class="min-h-screen flex flex-col items-center justify-center pt-20 pb-10">
-        <div class="w-full max-w-2xl mx-auto p-6 md:p-8 rounded-2xl game-card">
-            
-            <div class="text-center mb-4">
-                <h2 class="text-3xl md:text-4xl font-bold text-white">Rock ✊ Paper ✋ Scissors ✌️</h2>
-                <p class="text-gray-400 mt-2">Place your bet and make your move.</p>
-            </div>
+                    // Check if on the correct network
+                    if (chainId !== somniaNetwork.chainId) {
+                        const networkAdded = await addSomniaNetwork();
+                        if (!networkAdded) return;
+                        // Wait for the user to switch the network
+                        await new Promise(resolve => {
+                            window.ethereum.on('chainChanged', (newChainId) => {
+                                if (newChainId === somniaNetwork.chainId) {
+                                    window.location.reload(); // Reload after network change
+                                    resolve();
+                                }
+                            });
+                        });
+                    }
 
-            <!-- Bet Selection -->
-            <div class="mb-6">
-                <p class="text-center text-sm font-semibold text-gray-400 mb-3">SELECT BET AMOUNT (STT)</p>
-                <div id="bet-controls" class="flex justify-center flex-wrap gap-2">
-                    <button data-bet="0.01" class="btn-bet font-semibold py-2 px-4 rounded-lg">0.01</button>
-                    <button data-bet="0.05" class="btn-bet font-semibold py-2 px-4 rounded-lg">0.05</button>
-                    <button data-bet="0.1" class="btn-bet font-semibold py-2 px-4 rounded-lg">0.1</button>
-                </div>
-                <div class="flex justify-center items-center gap-2 mt-3">
-                    <input type="number" id="custom-bet-input" placeholder="Custom Bet" class="w-32 text-center rounded-lg py-2 px-3">
-                    <button id="set-custom-bet-btn" class="btn-primary font-semibold py-2 px-4 rounded-lg">Set</button>
-                </div>
-            </div>
+                    // Request accounts and get signer
+                    const accounts = await provider.send('eth_requestAccounts', []);
+                    userAddress = accounts[0];
+                    signer = provider.getSigner();
+                    diceGameContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+                    isWalletConnected = true;
+                    updateWalletUI();
+                    updateBalance();
+                    enableGameControls(true);
+                    messageBox.textContent = "Wallet connected! Place your bet.";
+                    messageBox.className = 'text-green-400 h-10 text-xl font-semibold';
+                } catch (error) {
+                    console.error("Connection failed:", error);
+                    messageBox.textContent = "Connection to wallet failed. Please try again.";
+                    messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
+                    isWalletConnected = false;
+                }
+            } else {
+                messageBox.textContent = "MetaMask or another wallet is not installed. Please install one to play.";
+                messageBox.className = 'text-yellow-400 h-10 text-xl font-semibold';
+            }
+        };
 
-            <!-- Game Display -->
-            <div class="flex justify-around items-center my-6">
-                <div class="text-center">
-                    <h3 class="text-lg font-semibold text-indigo-300 mb-3">You</h3>
-                    <div id="player-choice-display" class="choice-display bg-gray-700 w-32 h-32 md:w-40 md:h-40 rounded-xl flex items-center justify-center text-5xl">?</div>
-                </div>
-                <div class="text-2xl font-bold text-gray-500">VS</div>
-                <div class="text-center">
-                    <h3 class="text-lg font-semibold text-gray-400 mb-3">Opponent</h3>
-                    <div id="opponent-choice-display" class="choice-display bg-gray-900 w-32 h-32 md:w-40 md:h-40 rounded-xl flex items-center justify-center text-5xl">?</div>
-                </div>
-            </div>
+        const disconnectWallet = () => {
+            // This is a soft disconnect for the UI. MetaMask doesn't have a formal disconnect API.
+            userAddress = null;
+            isWalletConnected = false;
+            provider = null;
+            signer = null;
+            diceGameContract = null;
+            updateWalletUI();
+            messageBox.textContent = "Wallet disconnected.";
+            messageBox.className = 'text-gray-400 h-10 text-xl font-semibold';
+        };
 
-            <!-- Result Display -->
-            <div id="result-display" class="result-display text-center text-xl font-bold my-6 p-4 rounded-lg bg-gray-900/50">
-                Connect your wallet to start
-            </div>
-            
-            <div id="play-again-container" class="text-center mt-6 hidden">
-                <button id="play-again-btn" class="btn-primary font-bold py-3 px-6 rounded-lg text-lg">Play Again</button>
-            </div>
-        </div>
-    </div>
+        // Event listener for connect/disconnect button
+        connectButton.addEventListener('click', () => {
+            if (isWalletConnected) {
+                disconnectWallet();
+            } else {
+                connectWallet();
+            }
+        });
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- DOM Elements ---
-            const connectWalletBtn = document.getElementById('connect-wallet-btn');
-            const walletInfo = document.getElementById('wallet-info');
-            const walletAddressEl = document.getElementById('wallet-address');
-            const balanceDisplay = document.getElementById('balance-display');
-            const playerBalanceEl = document.getElementById('player-balance');
-            const playerChoiceDisplay = document.getElementById('player-choice-display');
-            const opponentChoiceDisplay = document.getElementById('opponent-choice-display');
-            const resultDisplay = document.getElementById('result-display');
-            const choiceButtons = document.querySelectorAll('.btn-choice');
-            const betButtons = document.querySelectorAll('.btn-bet');
-            const customBetInput = document.getElementById('custom-bet-input');
-            const setCustomBetBtn = document.getElementById('set-custom-bet-btn');
-            const playAgainBtn = document.getElementById('play-again-btn');
-            const playAgainContainer = document.getElementById('play-again-container');
+        // Listen for account changes and network changes
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length > 0) {
+                    userAddress = accounts[0];
+                    updateWalletUI();
+                    updateBalance();
+                } else {
+                    disconnectWallet();
+                }
+            });
+            window.ethereum.on('chainChanged', () => {
+                window.location.reload(); // Recommended by MetaMask for a clean state
+            });
+        }
 
-            // --- Ethers.js and Contract Setup ---
-            const contractAddress = "0x2b2C3f7321507Af4947Cfa60703Bd3933Dc52F11"; 
-            const contractABI = [ { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "uint256", "name": "gameId", "type": "uint256" }, { "indexed": true, "internalType": "address", "name": "player", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "BetReturned", "type": "event" }, { "inputs": [ { "internalType": "bytes32", "name": "_choiceHash", "type": "bytes32" } ], "name": "commitMove", "outputs": [], "stateMutability": "payable", "type": "function" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "uint256", "name": "gameId", "type": "uint256" }, { "indexed": true, "internalType": "address", "name": "player1", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "bet", "type": "uint256" } ], "name": "GameCreated", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "uint256", "name": "gameId", "type": "uint256" }, { "indexed": false, "internalType": "address", "name": "winner", "type": "address" }, { "indexed": false, "internalType": "address", "name": "loser", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "payout", "type": "uint256" }, { "indexed": false, "internalType": "bool", "name": "isDraw", "type": "bool" } ], "name": "GameResult", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "previousOwner", "type": "address" }, { "indexed": true, "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "OwnershipTransferred", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "uint256", "name": "gameId", "type": "uint256" }, { "indexed": true, "internalType": "address", "name": "player2", "type": "address" } ], "name": "PlayerJoined", "type": "event" }, { "inputs": [ { "internalType": "uint256", "name": "_gameId", "type": "uint256" } ], "name": "reclaimBet", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "renounceOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "_gameId", "type": "uint256" }, { "internalType": "enum RockPaperScissors.Move", "name": "_choice", "type": "uint8" }, { "internalType": "bytes32", "name": "_salt", "type": "bytes32" } ], "name": "revealMove", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "transferOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "withdraw", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "gameNonce", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "name": "games", "outputs": [ { "internalType": "address", "name": "player1", "type": "address" }, { "internalType": "address", "name": "player2", "type": "address" }, { "internalType": "uint256", "name": "bet", "type": "uint256" }, { "internalType": "bytes32", "name": "choiceHash1", "type": "bytes32" }, { "internalType": "bytes32", "name": "choiceHash2", "type": "bytes32" }, { "internalType": "enum RockPaperScissors.Move", "name": "choice1", "type": "uint8" }, { "internalType": "enum RockPaperScissors.Move", "name": "choice2", "type": "uint8" }, { "internalType": "bool", "name": "isOpen", "type": "bool" }, { "internalType": "uint256", "name": "creationTime", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "openGameId", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "owner", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" } ];
-            
-            let provider;
-            let signer;
-            let contract;
-            let isWalletConnected = false;
-            
-            // --- Game State ---
-            let currentBet = 0.01;
-            let playerChoice = null;
-            let isGameInProgress = false;
+        // --- Game Logic with Transactions ---
+        const rollDie = async (userGuess) => {
+            const betAmount = betAmountInput.value;
+            if (!betAmount || parseFloat(betAmount) <= 0) {
+                messageBox.textContent = "Please enter a valid bet amount.";
+                messageBox.className = 'text-yellow-400 h-10 text-xl font-semibold';
+                return;
+            }
 
-            const choiceEnums = { rock: 1, paper: 2, scissors: 3 };
-            const choiceEmojis = { rock: '✊', paper: '✋', scissors: '✌️' };
+            const betAmountWei = ethers.utils.parseEther(betAmount);
+            const balance = await provider.getBalance(userAddress);
+            if (balance.lt(betAmountWei)) {
+                messageBox.textContent = "Insufficient funds for this bet.";
+                messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
+                return;
+            }
 
-            // --- Wallet Connection ---
-            const connectWallet = async () => {
-                if (typeof window.ethereum !== 'undefined') {
-                    try {
-                        provider = new ethers.providers.Web3Provider(window.ethereum);
-                        await provider.send("eth_requestAccounts", []);
+            enableGameControls(false);
+            messageBox.textContent = 'Processing transaction... Please confirm in your wallet.';
+            messageBox.className = 'text-yellow-400 h-10 text-xl font-semibold';
 
-                        // Check if the user is on the Somnia Testnet
-                        const network = await provider.getNetwork();
-                        if (network.chainId !== 50312) {
-                            resultDisplay.textContent = 'Please switch to the Somnia Testnet in MetaMask!';
-                            // Optional: Add logic here to prompt the user to switch networks
-                            return;
+            try {
+                // Call the smart contract's placeBet function
+                const guessValue = userGuess === 'odd' ? 0 : 1; // 0 for Odd, 1 for Even based on the enum in the contract
+                
+                const tx = await diceGameContract.placeBet(guessValue, { value: betAmountWei });
+                messageBox.textContent = 'Transaction sent. Waiting for confirmation...';
+                
+                const receipt = await tx.wait(); // Wait for the transaction to be mined
+
+                // Listen for events to determine the game result
+                const gameResultEvent = receipt.events.find(e => e.event === 'GameResult');
+                if (gameResultEvent) {
+                    const rolledNumber = gameResultEvent.args.rolledNumber.toNumber();
+                    const isWinner = gameResultEvent.args.isWinner;
+
+                    dieElement.classList.add('roll-animation');
+                    setTimeout(() => {
+                        renderDieFace(rolledNumber);
+                        dieElement.classList.remove('roll-animation');
+
+                        if (isWinner) {
+                            messageBox.textContent = `You won! It was ${rolledNumber}. You received ${betAmount * 2} STT.`;
+                            messageBox.className = 'text-green-400 h-10 text-xl font-semibold';
+                        } else {
+                            messageBox.textContent = `You lost! It was ${rolledNumber}. Your bet of ${betAmount} STT is gone.`;
+                            messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
                         }
 
-                        signer = provider.getSigner();
-                        contract = new ethers.Contract(contractAddress, contractABI, signer);
-
-                        const address = await signer.getAddress();
-                        const balance = await signer.getBalance();
-
-                        walletAddressEl.textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
-                        playerBalanceEl.textContent = ethers.utils.formatEther(balance).slice(0, 5);
-                        
-                        connectWalletBtn.classList.add('hidden');
-                        walletInfo.classList.remove('hidden');
-                        walletInfo.classList.add('flex');
-                        balanceDisplay.classList.remove('hidden');
-                        balanceDisplay.classList.add('flex');
-                        
-                        isWalletConnected = true;
-                        resultDisplay.textContent = 'Select a bet and make your move!';
-                        listenForGameEvents();
-                    } catch (error) {
-                        console.error("Wallet connection failed:", error);
-                        resultDisplay.textContent = 'Wallet connection failed. Check console.';
-                    }
+                        updateBalance();
+                        enableGameControls(true);
+                    }, 750);
                 } else {
-                    resultDisplay.textContent = 'Please install MetaMask!';
-                }
-            };
-
-            // --- Game Logic (Interacting with Smart Contract) ---
-            const handleChoice = async (e) => {
-                if (!isWalletConnected || isGameInProgress) return;
-                
-                isGameInProgress = true;
-                playerChoice = e.currentTarget.dataset.choice;
-                playerChoiceDisplay.textContent = choiceEmojis[playerChoice];
-                resultDisplay.textContent = 'Preparing your transaction...';
-
-                try {
-                    // 1. Generate a secret salt
-                    const salt = ethers.utils.randomBytes(32);
-                    const choiceEnum = choiceEnums[playerChoice];
-
-                    // 2. Create the hash
-                    const choiceHash = ethers.utils.solidityKeccak256(['uint8', 'bytes32'], [choiceEnum, salt]);
-                    
-                    // 3. Send the transaction to commit the move
-                    const betInWei = ethers.utils.parseEther(currentBet.toString());
-                    const tx = await contract.commitMove(choiceHash, { value: betInWei });
-
-                    resultDisplay.textContent = 'Waiting for transaction confirmation...';
-                    await tx.wait();
-
-                    resultDisplay.textContent = 'Move committed! Waiting for opponent...';
-                    
-                    // Store choice and salt locally to use for the reveal step
-                    localStorage.setItem('playerChoice', choiceEnum);
-                    localStorage.setItem('playerSalt', ethers.utils.hexlify(salt));
-                    
-                } catch (error) {
-                    console.error("Transaction failed:", error);
-                    resultDisplay.textContent = 'Transaction failed. Check console.';
-                    isGameInProgress = false;
-                }
-            };
-
-            // --- Event Listeners from Smart Contract ---
-            const listenForGameEvents = () => {
-                if (!contract) return;
-                
-                contract.on("GameResult", (gameId, winner, loser, payout, isDraw) => {
-                    console.log(`GameResult event:`, { gameId, winner, loser, payout, isDraw });
-                    
-                    if (isDraw) {
-                        resultDisplay.textContent = `Game #${gameId}: It's a draw! Bet returned.`;
-                    } else {
-                        signer.getAddress().then(address => {
-                            if (winner.toLowerCase() === address.toLowerCase()) {
-                                resultDisplay.textContent = `Game #${gameId}: You won ${ethers.utils.formatEther(payout)} STT!`;
-                            } else {
-                                resultDisplay.textContent = `Game #${gameId}: You lost.`;
-                            }
-                        });
-                    }
+                    messageBox.textContent = "Game transaction confirmed, but no result event was found.";
+                    messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
                     updateBalance();
-                    playAgainContainer.classList.remove('hidden');
-                });
-            };
-            
-            const updateBalance = async () => {
-                if(signer) {
-                    const balance = await signer.getBalance();
-                    playerBalanceEl.textContent = ethers.utils.formatEther(balance).slice(0, 5);
+                    enableGameControls(true);
                 }
-            };
-
-            const resetGame = () => {
-                isGameInProgress = false;
-                playerChoiceDisplay.textContent = '?';
-                opponentChoiceDisplay.textContent = '?';
-                resultDisplay.textContent = 'Make your move!';
-                playAgainContainer.classList.add('hidden');
-            };
-            
-            const handlePresetBetSelection = (e) => {
-                if (isGameInProgress) return;
-                betButtons.forEach(btn => btn.classList.remove('selected'));
-                e.currentTarget.classList.add('selected');
-                currentBet = parseFloat(e.currentTarget.dataset.bet);
-                customBetInput.value = '';
+            } catch (error) {
+                console.error("Transaction failed:", error);
+                if (error.code === 4001) {
+                    messageBox.textContent = "Transaction rejected by user.";
+                } else {
+                    messageBox.textContent = `Transaction failed: ${error.message}`;
+                }
+                messageBox.className = 'text-red-400 h-10 text-xl font-semibold';
+                enableGameControls(true);
             }
+        };
 
-            const handleCustomBet = () => {
-                if (isGameInProgress) return;
-                const betValue = parseFloat(customBetInput.value);
-                if (isNaN(betValue) || betValue <= 0) {
-                    resultDisplay.textContent = 'Invalid bet amount!';
-                    return;
-                }
-                currentBet = betValue;
-                betButtons.forEach(btn => btn.classList.remove('selected'));
-                resultDisplay.textContent = `Custom bet of ${currentBet} STT set.`;
-            };
-
-            // --- Event Listeners ---
-            connectWalletBtn.addEventListener('click', connectWallet);
-            choiceButtons.forEach(button => button.addEventListener('click', handleChoice));
-            betButtons.forEach(button => button.addEventListener('click', handlePresetBetSelection));
-            setCustomBetBtn.addEventListener('click', handleCustomBet);
-            playAgainBtn.addEventListener('click', resetGame);
-            
-            // --- Initialize ---
-            betButtons[0].classList.add('selected'); // Select 0.01 by default
+        // --- Quick Bet Buttons Logic ---
+        quickBetButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                betAmountInput.value = button.getAttribute('data-value');
+            });
         });
-    </script>
-</body>
-</html>
-turn;
-                
-                contract.on("GameResult", (gameId, winner, loser, payout, isDraw) => {
-                    console.log(`GameResult event:`, { gameId, winner, loser, payout, isDraw });
-                    
-                    if (isDraw) {
-                        resultDisplay.textContent = `Game #${gameId}: It's a draw! Bet returned.`;
-                    } else {
-                        signer.getAddress().then(address => {
-                            if (winner.toLowerCase() === address.toLowerCase()) {
-                                resultDisplay.textContent = `Game #${gameId}: You won ${ethers.utils.formatEther(payout)} STT!`;
-                            } else {
-                                resultDisplay.textContent = `Game #${gameId}: You lost.`;
-                            }
-                        });
-                    }
-                    updateBalance();
-                    playAgainContainer.classList.remove('hidden');
-                });
-            };
-            
-            const updateBalance = async () => {
-                if(signer) {
-                    const balance = await signer.getBalance();
-                    playerBalanceEl.textContent = ethers.utils.formatEther(balance).slice(0, 5);
-                }
-            };
 
-            const resetGame = () => {
-                isGameInProgress = false;
-                playerChoiceDisplay.textContent = '?';
-                opponentChoiceDisplay.textContent = '?';
-                resultDisplay.textContent = 'Make your move!';
-                playAgainContainer.classList.add('hidden');
-            };
-            
-            const handlePresetBetSelection = (e) => {
-                if (isGameInProgress) return;
-                betButtons.forEach(btn => btn.classList.remove('selected'));
-                e.currentTarget.classList.add('selected');
-                currentBet = parseFloat(e.currentTarget.dataset.bet);
-                customBetInput.value = '';
-            }
+        // --- Event Listeners ---
+        oddButton.addEventListener('click', () => rollDie('odd'));
+        evenButton.addEventListener('click', () => rollDie('even'));
 
-            const handleCustomBet = () => {
-                if (isGameInProgress) return;
-                const betValue = parseFloat(customBetInput.value);
-                if (isNaN(betValue) || betValue <= 0) {
-                    resultDisplay.textContent = 'Invalid bet amount!';
-                    return;
-                }
-                currentBet = betValue;
-                betButtons.forEach(btn => btn.classList.remove('selected'));
-                resultDisplay.textContent = `Custom bet of ${currentBet} STT set.`;
-            };
-
-            // --- Event Listeners ---
-            connectWalletBtn.addEventListener('click', connectWallet);
-            choiceButtons.forEach(button => button.addEventListener('click', handleChoice));
-            betButtons.forEach(button => button.addEventListener('click', handlePresetBetSelection));
-            setCustomBetBtn.addEventListener('click', handleCustomBet);
-            playAgainBtn.addEventListener('click', resetGame);
-            
-            // --- Initialize ---
-            betButtons[0].classList.add('selected'); // Select 0.01 by default
-        });
+        // --- Initial State on Load ---
+        window.onload = () => {
+            renderDieFace(1); // Show the number 1 die face on load
+            updateWalletUI(); // Set initial button state
+        };
     </script>
 </body>
 </html>
